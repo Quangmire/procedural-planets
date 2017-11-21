@@ -10,28 +10,33 @@
 #include <glm/gtx/string_cast.hpp>
 #include <iostream>
 
+struct Vertex {
+    glm::vec3 vertex;
+    glm::vec3 color;
+};
+
 struct Icosphere {
 private:
     const float a = 0.525731112119133606f;
     const float b = 0.850650808352039932f;
     const float c = 0.0f;
 public:
-    std::vector<glm::vec3>  vertices;
+    std::vector<Vertex>  vertices;
     std::vector<glm::uvec3> triangles;
     Icosphere() {
         // Add vertices of unit icosphere
-        vertices.push_back(glm::vec3(-a,  c,  b));
-        vertices.push_back(glm::vec3( a,  c,  b));
-        vertices.push_back(glm::vec3(-a,  c, -b));
-        vertices.push_back(glm::vec3( a,  c, -b));
-        vertices.push_back(glm::vec3( c,  b,  a));
-        vertices.push_back(glm::vec3( c,  b, -a));
-        vertices.push_back(glm::vec3( c, -b,  a));
-        vertices.push_back(glm::vec3( c, -b, -a));
-        vertices.push_back(glm::vec3( b,  a,  c));
-        vertices.push_back(glm::vec3(-b,  a,  c));
-        vertices.push_back(glm::vec3( b, -a,  c));
-        vertices.push_back(glm::vec3(-b, -a,  c));
+        vertices.push_back({glm::vec3(-a,  c,  b), glm::vec3(1.f,1.f,1.f)});
+        vertices.push_back({glm::vec3( a,  c,  b), glm::vec3(1.f,1.f,1.f)});
+        vertices.push_back({glm::vec3(-a,  c, -b), glm::vec3(1.f,1.f,1.f)});
+        vertices.push_back({glm::vec3( a,  c, -b), glm::vec3(1.f,1.f,1.f)});
+        vertices.push_back({glm::vec3( c,  b,  a), glm::vec3(1.f,1.f,1.f)});
+        vertices.push_back({glm::vec3( c,  b, -a), glm::vec3(1.f,1.f,1.f)});
+        vertices.push_back({glm::vec3( c, -b,  a), glm::vec3(1.f,1.f,1.f)});
+        vertices.push_back({glm::vec3( c, -b, -a), glm::vec3(1.f,1.f,1.f)});
+        vertices.push_back({glm::vec3( b,  a,  c), glm::vec3(1.f,1.f,1.f)});
+        vertices.push_back({glm::vec3(-b,  a,  c), glm::vec3(1.f,1.f,1.f)});
+        vertices.push_back({glm::vec3( b, -a,  c), glm::vec3(1.f,1.f,1.f)});
+        vertices.push_back({glm::vec3(-b, -a,  c), glm::vec3(1.f,1.f,1.f)});
  
         // Add triangles of unit icosphere
         triangles.push_back(glm::uvec3(0,4,1));
@@ -65,9 +70,9 @@ public:
             // Loop through every edge
             for(uint32_t i = 0; i < 3; i++) {
                 // Add normalized midpoints
-                glm::vec3 a = vertices[tri[i]];
-                glm::vec3 b = vertices[tri[(i + 1) % 3]];
-                vertices.push_back(glm::normalize(a + b));
+                Vertex a = vertices[tri[i]];
+                Vertex b = vertices[tri[(i + 1) % 3]];
+                vertices.push_back({glm::normalize(a.vertex + b.vertex), a.color});
                 mid[i] = vertices.size() - 1;
             }
             // t[0] m[0] t[1] m[1] t[2] m[2] t[0]

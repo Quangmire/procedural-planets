@@ -8,26 +8,27 @@
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/string_cast.hpp>
 
 #include "icosphere.h"
+#include "perlin.h"
 
 static const char* vertex_shader_text =
 "uniform mat4 MVP;\n"
-//"attribute vec3 vCol;\n"
+"attribute vec3 vCol;\n"
 "attribute vec3 vPos;\n"
-//"varying vec3 color;\n"
+"varying vec3 color;\n"
 "void main()\n"
 "{\n"
 "    gl_Position = MVP * vec4(vPos, 1.0);\n"
-//"    color = vCol;\n"
+"    color = vCol;\n"
 "}\n";
 
 static const char* fragment_shader_text =
 "varying vec3 color;\n"
 "void main()\n"
 "{\n"
-//"    //gl_FragColor = vec4(color, 1.0);\n"
-"    gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);\n"
+"    gl_FragColor = vec4(color, 1.0);\n"
 "}\n";
 
 static void error_callback(int error, const char* description) {
@@ -71,8 +72,15 @@ int main(void) {
     glGetError();
 
     Icosphere sphere;
-    for(int i = 0; i < 3; i++) {
+    for(int i = 0; i < 5; i++) {
         sphere.subdivide();
+    }
+    for(int i = 0; i < sphere.vertices.size(); i++) {
+        auto vert = sphere.vertices[i];
+        auto v = vert.vertex;
+        float noise = octave_perlin(v.x/2.f + 2, v.y/2.f + 2, v.z/2.f + 2, 4, 2);
+        noise = noise * 0.4f - 0.2f + 1.0f;
+        sphere.vertices[i] = {noise >= 1.0f ? noise * v : v, noise >= 1.0f ? glm::vec3(0.0f, 1.0f, 0.0f) : glm::vec3(0.0f, 0.0f, 1.0f)};
     }
 
     glGenVertexArrays(1, &vertex_array);
@@ -80,7 +88,7 @@ int main(void) {
     glGenBuffers(2, &buffers[0]);
     glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
     glBufferData(GL_ARRAY_BUFFER,
-            sphere.vertices.size() * 4 * sizeof(float),
+            sphere.vertices.size() * 6 * sizeof(float),
             &sphere.vertices[0], GL_STATIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers[1]);
@@ -104,18 +112,16 @@ int main(void) {
 
     mvp_location = glGetUniformLocation(program, "MVP");
     vpos_location = glGetAttribLocation(program, "vPos");
-    //vcol_location = glGetAttribLocation(program, "vCol");
+    vcol_location = glGetAttribLocation(program, "vCol");
 
     glEnableVertexAttribArray(vpos_location);
     glVertexAttribPointer(vpos_location, 3, GL_FLOAT, GL_FALSE,
-                          sizeof(float) * 3, (void*) 0);
-/*
-                          sizeof(float) * 5, (void*) 0);
+                          sizeof(float) * 6, (void*) 0);
     glEnableVertexAttribArray(vcol_location);
     glVertexAttribPointer(vcol_location, 3, GL_FLOAT, GL_FALSE,
-                          sizeof(float) * 5, (void*) (sizeof(float) * 2));
-*/
-    glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+                          sizeof(float) * 6, (void*) (sizeof(float) * 3));
+    //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
     while (!glfwWindowShouldClose(window))
     {
         float ratio;
@@ -123,11 +129,14 @@ int main(void) {
         glfwGetFramebufferSize(window, &width, &height);
         ratio = width / (float) height;
         glViewport(0, 0, width, height);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glEnable(GL_DEPTH_TEST);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glDepthFunc(GL_LESS);
 
-        glm::mat4 m = glm::rotate(glm::mat4(1.0f), (float) glfwGetTime(), glm::vec3(0.0f, 1.0f, 0.0f));
-        glm::mat4 p = glm::ortho(-ratio, ratio, -1.f, 1.f, -1.f, 1.f);
-        glm::mat4 mvp = p * m;
+        glm::mat4 m = glm::rotate(glm::mat4(1.0f), float(glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f));
+        glm::mat4 v = glm::lookAt(glm::vec3(0.0f, 0.0f, -4.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        glm::mat4 p = glm::perspective(45.0f, ratio, 0.0001f, 1000.0f);//glm::ortho(-ratio, ratio, -1.f, 1.f, -1.f, 1.f);
+        glm::mat4 mvp = p * v * m;
 
         glUseProgram(program);
         glUniformMatrix4fv(mvp_location, 1, GL_FALSE, glm::value_ptr(mvp));

@@ -75,7 +75,7 @@ float fade(float t) {
     return t * t * t * (t * (t * 6 - 15) + 10);
 }
 
-float perlin(x, y, z, seed) {
+float perlin(float x, float y, float z) {
     // Get grid points. Bind to [0, 255] so that it can access the p array
     // This means it will wrap every 256, but subsampling is fine
     int xi = ((int)x) & 255;
@@ -83,9 +83,9 @@ float perlin(x, y, z, seed) {
     int zi = ((int)z) & 255;
 
     // Get location inside of unit cube
-    x -= xi;
-    y -= yi;
-    z -= zi;
+    x -= (int)x;
+    y -= (int)y;
+    z -= (int)z;
 
     // Fading is basically a smoothing curve
     float u = fade(x);
@@ -95,16 +95,34 @@ float perlin(x, y, z, seed) {
     // Linearly interpolate the dot product of the gradient and the difference
     // between the location and each of the 8 unit cube locations
     float x1 = lerp(grad(hash(    xi,     yi, zi), x,     y,     z), 
-                    grad(hash(1 + xi,     yi, zi), x - 1, y,     z), u);
+                    grad(hash(1 + xi,     yi, zi), x - 1, y,     z), 1-u);
     float x2 = lerp(grad(hash(    xi, 1 + yi, zi), x    , y - 1, z),
-                    grad(hash(1 + xi, 1 + yi, zi), x - 1, y - 1, z), u);
-    float y1 = lerp(x1, x2, v);
+                    grad(hash(1 + xi, 1 + yi, zi), x - 1, y - 1, z), 1-u);
+    float y1 = lerp(x1, x2, 1-v);
     x1 = lerp(grad(hash(    xi,     yi, 1 + zi), x,     y,     z - 1), 
-              grad(hash(1 + xi,     yi, 1 + zi), x - 1, y,     z - 1), u);
+              grad(hash(1 + xi,     yi, 1 + zi), x - 1, y,     z - 1), 1-u);
     x2 = lerp(grad(hash(    xi, 1 + yi, 1 + zi), x    , y - 1, z - 1),
-              grad(hash(1 + xi, 1 + yi, 1 + zi), x - 1, y - 1, z - 1), u);
-    float y2 = lerp(x1, x2, v);
+              grad(hash(1 + xi, 1 + yi, 1 + zi), x - 1, y - 1, z - 1), 1-u);
+    float y2 = lerp(x1, x2, 1-v);
     // Linearly interpolate in the z direction + normalize [-1,1] -> [0,1]
-    return (lerp(y1, y2, w) + 1) / 2
+    return (lerp(y1, y2, 1-w) + 1.0f) / 2.0f;
 }
+
+float octave_perlin(float x, float y, float z, int octaves, float persistence) {
+    float total = 0;
+    float frequency = 1;
+    float amplitude = 1;
+    float maxValue = 0;  // Used for normalizing result to 0.0 - 1.0
+    for(int i=0;i<octaves;i++) {
+        total += perlin(x * frequency, y * frequency, z * frequency) * amplitude;
+        
+        maxValue += amplitude;
+        
+        amplitude *= persistence;
+        frequency *= 2;
+    }
+    
+    return total/maxValue;
+}
+
 #endif
