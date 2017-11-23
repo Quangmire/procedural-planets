@@ -2,7 +2,7 @@
 #define PERLIN_H
 // Permutation of array of values from 0 to 255
 // Repeated twice to avoid overflow
-int p[512] = { 
+int p[512] = {
     151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,
     8,99,37,240,21,10,23,190,6,148,247,120,234,75,0,26,197,62,94,252,219,203,
     117,35,11,32,57,177,33,88,237,149,56,87,174,20,125,136,171,168,68,175,74,
@@ -94,12 +94,12 @@ float perlin(float x, float y, float z) {
 
     // Linearly interpolate the dot product of the gradient and the difference
     // between the location and each of the 8 unit cube locations
-    float x1 = lerp(grad(hash(    xi,     yi, zi), x,     y,     z), 
+    float x1 = lerp(grad(hash(    xi,     yi, zi), x,     y,     z),
                     grad(hash(1 + xi,     yi, zi), x - 1, y,     z), 1-u);
     float x2 = lerp(grad(hash(    xi, 1 + yi, zi), x    , y - 1, z),
                     grad(hash(1 + xi, 1 + yi, zi), x - 1, y - 1, z), 1-u);
     float y1 = lerp(x1, x2, 1-v);
-    x1 = lerp(grad(hash(    xi,     yi, 1 + zi), x,     y,     z - 1), 
+    x1 = lerp(grad(hash(    xi,     yi, 1 + zi), x,     y,     z - 1),
               grad(hash(1 + xi,     yi, 1 + zi), x - 1, y,     z - 1), 1-u);
     x2 = lerp(grad(hash(    xi, 1 + yi, 1 + zi), x    , y - 1, z - 1),
               grad(hash(1 + xi, 1 + yi, 1 + zi), x - 1, y - 1, z - 1), 1-u);
@@ -115,13 +115,10 @@ float octave_perlin(float x, float y, float z, int octaves, float persistence) {
     float maxValue = 0;  // Used for normalizing result to 0.0 - 1.0
     for(int i=0;i<octaves;i++) {
         total += perlin(x * frequency, y * frequency, z * frequency) * amplitude;
-        
         maxValue += amplitude;
-        
         amplitude *= persistence;
         frequency *= 2;
     }
-    
     return total/maxValue;
 }
 

@@ -12,7 +12,7 @@
 
 struct Vertex {
     glm::vec3 vertex;
-    glm::vec3 color;
+    glm::vec4 color;
 };
 
 struct Icosphere {
@@ -25,19 +25,19 @@ public:
     std::vector<glm::uvec3> triangles;
     Icosphere() {
         // Add vertices of unit icosphere
-        vertices.push_back({glm::vec3(-a,  c,  b), glm::vec3(1.f,1.f,1.f)});
-        vertices.push_back({glm::vec3( a,  c,  b), glm::vec3(1.f,1.f,1.f)});
-        vertices.push_back({glm::vec3(-a,  c, -b), glm::vec3(1.f,1.f,1.f)});
-        vertices.push_back({glm::vec3( a,  c, -b), glm::vec3(1.f,1.f,1.f)});
-        vertices.push_back({glm::vec3( c,  b,  a), glm::vec3(1.f,1.f,1.f)});
-        vertices.push_back({glm::vec3( c,  b, -a), glm::vec3(1.f,1.f,1.f)});
-        vertices.push_back({glm::vec3( c, -b,  a), glm::vec3(1.f,1.f,1.f)});
-        vertices.push_back({glm::vec3( c, -b, -a), glm::vec3(1.f,1.f,1.f)});
-        vertices.push_back({glm::vec3( b,  a,  c), glm::vec3(1.f,1.f,1.f)});
-        vertices.push_back({glm::vec3(-b,  a,  c), glm::vec3(1.f,1.f,1.f)});
-        vertices.push_back({glm::vec3( b, -a,  c), glm::vec3(1.f,1.f,1.f)});
-        vertices.push_back({glm::vec3(-b, -a,  c), glm::vec3(1.f,1.f,1.f)});
- 
+        vertices.push_back({glm::vec3(-a,  c,  b), glm::vec4(1.f,1.f,1.f,1.f)});
+        vertices.push_back({glm::vec3( a,  c,  b), glm::vec4(1.f,1.f,1.f,1.f)});
+        vertices.push_back({glm::vec3(-a,  c, -b), glm::vec4(1.f,1.f,1.f,1.f)});
+        vertices.push_back({glm::vec3( a,  c, -b), glm::vec4(1.f,1.f,1.f,1.f)});
+        vertices.push_back({glm::vec3( c,  b,  a), glm::vec4(1.f,1.f,1.f,1.f)});
+        vertices.push_back({glm::vec3( c,  b, -a), glm::vec4(1.f,1.f,1.f,1.f)});
+        vertices.push_back({glm::vec3( c, -b,  a), glm::vec4(1.f,1.f,1.f,1.f)});
+        vertices.push_back({glm::vec3( c, -b, -a), glm::vec4(1.f,1.f,1.f,1.f)});
+        vertices.push_back({glm::vec3( b,  a,  c), glm::vec4(1.f,1.f,1.f,1.f)});
+        vertices.push_back({glm::vec3(-b,  a,  c), glm::vec4(1.f,1.f,1.f,1.f)});
+        vertices.push_back({glm::vec3( b, -a,  c), glm::vec4(1.f,1.f,1.f,1.f)});
+        vertices.push_back({glm::vec3(-b, -a,  c), glm::vec4(1.f,1.f,1.f,1.f)});
+
         // Add triangles of unit icosphere
         triangles.push_back(glm::uvec3(0,4,1));
         triangles.push_back(glm::uvec3(0,9,4));
