@@ -27,5 +27,5 @@ To run it, use:
 ```bash
 build/bin/procgen
 ```
-## Report LInk
+## Report Link
 [Currently Broken Link](https://quangmire.github.io/projects/procedural-planets)
