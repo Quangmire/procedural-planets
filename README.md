@@ -28,4 +28,4 @@ To run it, use:
 build/bin/procgen
 ```
 ## Report Link
-[Currently Broken Link](https://quangmire.github.io/projects/procedural-planets)
+[Link](https://quangmire.github.io/projects/procedural-planets)
