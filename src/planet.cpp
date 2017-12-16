@@ -120,7 +120,7 @@ void Planet::render(int width, int height, float delta) {
 void Planet::generate(const Configuration cfg) {
     // Generate the planet
     if(config.seed != cfg.seed || config.show != cfg.show || config.radius != cfg.radius || config.subdivisions != cfg.subdivisions
-            || config.rotation_axis != cfg.rotation_axis) {
+            || config.rotation_axis != cfg.rotation_axis || config.sea_level != cfg.sea_level) {
         dirty = true;
         planet.regen();
         for(int i = 0; i < cfg.subdivisions; i++) {
@@ -162,7 +162,7 @@ void Planet::generate(const Configuration cfg) {
             if(moisture_t >= 6) moisture_t = 5;
             planet.vertices[i] = {noise >= 0.0f ? height * v : v * cfg.radius,
                     cfg.show == cfg.PLANET ?
-                        noise >= 0.475f ?
+                        noise >= cfg.sea_level ?
                             biomes[moisture_t][heat_t] :
                             glm::vec4(0.0f, 0.0f, noise, 1.0f) :
                     cfg.show == cfg.HEAT ?
@@ -190,5 +190,11 @@ void Planet::generate(const Configuration cfg) {
                     glm::vec4(1.0f, 1.0f, 1.0f, 0.0f)};
         }
     }
-    config = cfg;
+    if(!dirty) {
+        float ra = config.rotation_amount;
+        config = cfg;
+        config.rotation_amount = ra;
+    } else {
+        config = cfg;
+    }
 }

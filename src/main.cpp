@@ -65,8 +65,8 @@ int main(void) {
     glfwGetFramebufferSize(window, &width, &height);
 
     Configuration cfg;
-    cfg.subdivisions = 0;
-    cfg.cloud_subdivisions = 0;
+    cfg.subdivisions = 5;
+    cfg.cloud_subdivisions = 5;
 
     Planet planet;
     planet.generate(cfg);
@@ -140,6 +140,43 @@ int main(void) {
 
         if(keys[GLFW_KEY_R] == GLFW_RELEASE && pkeys[GLFW_KEY_R] == GLFW_PRESS) {
             cfg.seed = rand() % 2560000 / 10000.0f;
+            planet.generate(cfg);
+        }
+
+        if(keys[GLFW_KEY_W] == GLFW_RELEASE && pkeys[GLFW_KEY_W] == GLFW_PRESS) {
+            cfg.sea_level += 0.05f;
+            if(cfg.sea_level > 1.0f) {
+                cfg.sea_level = 1.0f;
+            }
+            planet.generate(cfg);
+        }
+
+        if(keys[GLFW_KEY_S] == GLFW_RELEASE && pkeys[GLFW_KEY_S] == GLFW_PRESS) {
+            cfg.sea_level -= 0.05f;
+            if(cfg.sea_level < 0.0f) {
+                cfg.sea_level = 0.0f;
+            }
+            planet.generate(cfg);
+        }
+
+        if(keys[GLFW_KEY_P] == GLFW_RELEASE && pkeys[GLFW_KEY_P] == GLFW_PRESS) {
+            cfg.rotating = !cfg.rotating;
+            planet.generate(cfg);
+        }
+
+        if(keys[GLFW_KEY_Q] == GLFW_RELEASE && pkeys[GLFW_KEY_Q] == GLFW_PRESS) {
+            cfg.camera_distance += 0.5f;
+            if(cfg.camera_distance > cfg.radius * 10) {
+                cfg.camera_distance = cfg.radius * 10;
+            }
+            planet.generate(cfg);
+        }
+
+        if(keys[GLFW_KEY_E] == GLFW_RELEASE && pkeys[GLFW_KEY_E] == GLFW_PRESS) {
+            cfg.camera_distance -= 0.5f;
+            if(cfg.camera_distance < cfg.radius + 0.5f) {
+                cfg.camera_distance = cfg.radius + 0.5f;
+            }
             planet.generate(cfg);
         }
         

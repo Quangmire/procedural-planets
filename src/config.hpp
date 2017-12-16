@@ -18,6 +18,7 @@ struct Configuration {
     int cloud_subdivisions = 6;
     int show = PLANET;
     float seed = 0;
+    float sea_level = 0.475f;
 };
 
 #endif
