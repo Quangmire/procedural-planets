@@ -1,5 +1,6 @@
 #include <iostream>
-
+#define GL_GLEXT_PROTOTYPES 1
+#define GL3_PROTOTYPES 1
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
@@ -9,29 +10,14 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/string_cast.hpp>
+#include <glm/gtx/rotate_vector.hpp>
 
-#include "icosphere.h"
-#include "perlin.h"
-#include "render.h"
+#include "icosphere.hpp"
+#include "perlin.hpp"
+#include "render.hpp"
 #include "debuggl.h"
-
-static const char* vertex_shader_text =
-"uniform mat4 MVP;\n"
-"attribute vec3 vPos;\n"
-"attribute vec4 vCol;\n"
-"varying vec4 color;\n"
-"void main()\n"
-"{\n"
-"    gl_Position = MVP * vec4(vPos, 1.0);\n"
-"    color = vCol;\n"
-"}\n";
-
-static const char* fragment_shader_text =
-"varying vec4 color;\n"
-"void main()\n"
-"{\n"
-"    gl_FragColor = color;\n"
-"}\n";
+#include "config.hpp"
+#include "planet.hpp"
 
 static void error_callback(int error, const char* description) {
     fprintf(stderr, "Error: %s\n", description);
@@ -59,7 +45,7 @@ int main(void) {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_SAMPLES, 4);
 
-    window = glfwCreateWindow(640, 480, "Simple example", NULL, NULL);
+    window = glfwCreateWindow(640, 480, "Procedural Planets", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -74,74 +60,21 @@ int main(void) {
     glewInit();
     glGetError();
 
-    // Generate the planet
-    float radius = 2.0f;
-    float camera_distance = 6.0f;
-    Icosphere planet;
-    for(int i = 0; i < 7; i++) {
-        planet.subdivide();
-    }
-    for(int i = 0; i < planet.vertices.size(); i++) {
-        auto vert = planet.vertices[i];
-        auto v = vert.vertex;
-        // Add 2 to move away from origin. Perlin does not handle negatives well
-        float noise = (octave_perlin(v.x/4.0f + 2, v.y/4.0f + 2, v.z/4.0f + 2, 4, 3) + 0.25f * octave_perlin(v.x/4.0f + 2, v.y/4.0f + 2, v.z/4.0f + 2, 6, 3))/1.25f;
-        planet.vertices[i] = {noise >= 0.0f ? (noise * 0.6f - 0.3f + radius) * v : v * radius,
-            noise >= 0.7 ? 
-                glm::vec4(1.0f,1.0f,1.0f,1.0f) :
-            noise >= 0.6 ?
-                glm::vec4(1-noise, 1-noise, 1-noise, 1.0f) : (
-                noise >= 0.5f ?
-                    glm::vec4(0.0f, noise, 0.0f, 1.0f) : (
-                    noise >= 0.475f ?
-                        glm::vec4(noise, noise, 0.0f, 1.0f) :
-                        glm::vec4(0.0f, 0.0f, noise, 1.0f)))};
-    }
-
-    // Generate clouds
-    float cloud_radius = radius + 0.13f;
-    Icosphere clouds;
-    for(int i = 0; i < 6; i++) {
-        clouds.subdivide();
-    }
-    for(int i = 0; i < clouds.vertices.size(); i++) {
-        auto vert = clouds.vertices[i];
-        auto v = vert.vertex;
-        float noise = octave_perlin(v.x/1.4f + 2, v.y/1.4f + 2, v.z/1.4f + 2, 4, 2);
-        noise = noise * 0.6f - 0.3f;
-        clouds.vertices[i] = {v * cloud_radius,
-            noise >= 0.0f ?
-                glm::vec4(1.0f, 1.0f, 1.0f, 5 * noise) :
-                glm::vec4(1.0f, 1.0f, 1.0f, 0.0f)};
-    }
-
     float ratio;
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);
-    ratio = width / (float) height;
-    glm::mat4 m = glm::rotate(glm::mat4(1.0f), float(glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f));
-    glm::mat4 v = glm::lookAt(glm::vec3(0.0f, 0.0f, -camera_distance), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    glm::mat4 p = glm::perspective(45.0f, ratio, 0.01f, 100.0f);
-    glm::mat4 mvp = p * v * m;
 
-    VertexArrayObject planet_render({"vertex", "index"});
-    planet_render.update_data("vertex", GL_ARRAY_BUFFER, planet.vertices.size() * sizeof(float) * 7, planet.vertices.data());
-    planet_render.update_data("index", GL_ELEMENT_ARRAY_BUFFER, planet.triangles.size() * sizeof(uint32_t) * 3, planet.triangles.data());
-    planet_render.shaders(
-            {vertex_shader_text, nullptr, fragment_shader_text},
-            {"vPos", "vCol"}, 7, {0, 3}, {"MVP"},
-            {[&mvp](GLint loc){glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(mvp));}}
-            );
+    Configuration cfg;
+    cfg.subdivisions = 0;
+    cfg.cloud_subdivisions = 0;
 
-    VertexArrayObject clouds_render({"vertex", "index"});
-    clouds_render.update_data("vertex", GL_ARRAY_BUFFER, clouds.vertices.size() * sizeof(float) * 7, clouds.vertices.data());
-    clouds_render.update_data("index", GL_ELEMENT_ARRAY_BUFFER, clouds.triangles.size() * sizeof(uint32_t) * 3, clouds.triangles.data());
-    clouds_render.shaders(
-            {vertex_shader_text, nullptr, fragment_shader_text},
-            {"vPos", "vCol"}, 7, {0, 3}, {"MVP"},
-            {[&mvp](GLint loc){glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(mvp));}}
-            );
+    Planet planet;
+    planet.generate(cfg);
+
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    float time = glfwGetTime();
+    int pkeys[GLFW_KEY_LAST];
+    int keys[GLFW_KEY_LAST];
     while (!glfwWindowShouldClose(window))
     {
         glfwGetFramebufferSize(window, &width, &height);
@@ -152,15 +85,67 @@ int main(void) {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glDepthFunc(GL_LEQUAL);
+        
+        for(int i = GLFW_KEY_SPACE; i < GLFW_KEY_LAST; i++) {
+            pkeys[i] = keys[i];
+            keys[i] = glfwGetKey(window, i);
+        }
 
-        p = glm::perspective(45.0f, ratio, 0.01f, 100.0f);
-        m = glm::rotate(glm::mat4(1.0f), float(glfwGetTime()/4), glm::vec3(0.0f, 1.0f, 0.0f));
-        mvp = p * v * m;
+        if(keys[GLFW_KEY_UP] == GLFW_RELEASE && pkeys[GLFW_KEY_UP] == GLFW_PRESS) {
+            if(cfg.subdivisions < 8) {
+                cfg.subdivisions = cfg.subdivisions + 1;
+                cfg.cloud_subdivisions = cfg.cloud_subdivisions + 1;
+                planet.generate(cfg);
+            }
+        }
 
-        planet_render.setup();
-        CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, planet.triangles.size() * 3, GL_UNSIGNED_INT, 0));
-        clouds_render.setup();
-        CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, clouds.triangles.size() * 3, GL_UNSIGNED_INT, 0));
+        if(keys[GLFW_KEY_DOWN] == GLFW_RELEASE && pkeys[GLFW_KEY_DOWN] == GLFW_PRESS) {
+            if(cfg.subdivisions > 0) {
+                cfg.subdivisions = cfg.subdivisions - 1;
+                cfg.cloud_subdivisions = cfg.cloud_subdivisions - 1;
+                planet.generate(cfg);
+            }
+        }
+
+        if(keys[GLFW_KEY_LEFT] == GLFW_RELEASE && pkeys[GLFW_KEY_LEFT] == GLFW_PRESS) {
+            cfg.rotation_axis = glm::rotate(cfg.rotation_axis, glm::pi<float>()/32.0f, glm::vec3(0.0f, 0.0f, -1.0f));
+            planet.generate(cfg);
+        }
+
+        if(keys[GLFW_KEY_RIGHT] == GLFW_RELEASE && pkeys[GLFW_KEY_RIGHT] == GLFW_PRESS) {
+            cfg.rotation_axis = glm::rotate(cfg.rotation_axis, -glm::pi<float>()/32.0f, glm::vec3(0.0f, 0.0f, -1.0f));
+            planet.generate(cfg);
+        }
+
+        if(keys[GLFW_KEY_3] == GLFW_RELEASE && pkeys[GLFW_KEY_3] == GLFW_PRESS) {
+            if(cfg.show != cfg.PLANET) {
+                cfg.show = cfg.PLANET;
+                planet.generate(cfg);
+            }
+        }
+
+        if(keys[GLFW_KEY_4] == GLFW_RELEASE && pkeys[GLFW_KEY_4] == GLFW_PRESS) {
+            if(cfg.show != cfg.HEAT) {
+                cfg.show = cfg.HEAT;
+                planet.generate(cfg);
+            }
+        }
+
+        if(keys[GLFW_KEY_5] == GLFW_RELEASE && pkeys[GLFW_KEY_5] == GLFW_PRESS) {
+            if(cfg.show != cfg.MOISTURE) {
+                cfg.show = cfg.MOISTURE;
+                planet.generate(cfg);
+            }
+        }
+
+        if(keys[GLFW_KEY_R] == GLFW_RELEASE && pkeys[GLFW_KEY_R] == GLFW_PRESS) {
+            cfg.seed = rand() % 2560000 / 10000.0f;
+            planet.generate(cfg);
+        }
+        
+        planet.render(width, height, glfwGetTime() - time);
+        time = glfwGetTime();
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }

@@ -1,5 +1,5 @@
-#ifndef ICOSPHERE_H
-#define ICOSPHERE_H
+#ifndef ICOSPHERE_HPP
+#define ICOSPHERE_HPP
 
 #include <vector>
 #include <glm/glm.hpp>
@@ -15,7 +15,7 @@ struct Vertex {
     glm::vec4 color;
 };
 
-struct Icosphere {
+class Icosphere {
 private:
     const float a = 0.525731112119133606f;
     const float b = 0.850650808352039932f;
@@ -24,6 +24,11 @@ public:
     std::vector<Vertex>  vertices;
     std::vector<glm::uvec3> triangles;
     Icosphere() {
+        regen();
+    }
+
+    void regen() {
+        vertices.clear();
         // Add vertices of unit icosphere
         vertices.push_back({glm::vec3(-a,  c,  b), glm::vec4(1.f,1.f,1.f,1.f)});
         vertices.push_back({glm::vec3( a,  c,  b), glm::vec4(1.f,1.f,1.f,1.f)});
@@ -38,6 +43,7 @@ public:
         vertices.push_back({glm::vec3( b, -a,  c), glm::vec4(1.f,1.f,1.f,1.f)});
         vertices.push_back({glm::vec3(-b, -a,  c), glm::vec4(1.f,1.f,1.f,1.f)});
 
+        triangles.clear();
         // Add triangles of unit icosphere
         triangles.push_back(glm::uvec3(0,4,1));
         triangles.push_back(glm::uvec3(0,9,4));

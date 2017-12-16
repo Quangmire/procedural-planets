@@ -1,7 +1,5 @@
-#ifndef PERLIN_H
-#define PERLIN_H
-// Permutation of array of values from 0 to 255
-// Repeated twice to avoid overflow
+#include "perlin.hpp"
+
 int p[512] = {
     151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,
     8,99,37,240,21,10,23,190,6,148,247,120,234,75,0,26,197,62,94,252,219,203,
@@ -121,5 +119,3 @@ float octave_perlin(float x, float y, float z, int octaves, float persistence) {
     }
     return total/maxValue;
 }
-
-#endif
